@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Farewell Bubbles Pop</title>
+<link href="https://fonts.googleapis.com/css2?family=Patrick+Hand&display=swap" rel="stylesheet">
+<style>
+body {
+  margin: 0;
+  overflow: hidden;
+  background: #FFC915; /* Realme yellow */
+  font-family: 'Patrick Hand', cursive;
+  position: relative;
+}
+
+/* Background letter/text */
+.background-text {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 60%;
+  max-width: 600px;
+  font-size: 20px;
+  line-height: 1.5;
+  color: #000;
+  padding: 15px 20px;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.05);
+  z-index: 1;
+  pointer-events: none;
+  text-align: center;
+}
+
+/* Bubble */
+.bubble {
+  position: absolute;
+  bottom: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  border-radius: 50%;
+  padding: 15px;
+  font-size: 14px;
+  color: #2b2b2b;
+  box-shadow: inset -8px -8px 15px rgba(255,255,255,0.4),
+              inset 8px 8px 15px rgba(255,255,255,0.2),
+              0 12px 25px rgba(0,0,0,0.15);
+  background: radial-gradient(circle at top left, rgba(255,255,255,0.9), rgba(255,255,255,0.4), rgba(255,255,255,0.15));
+  opacity: 0.9;
+  pointer-events: auto; /* important para ma-click */
+  cursor: pointer;
+}
+
+/* Particle for pop */
+.particle {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  background: rgba(255,255,255,0.8);
+  border-radius: 50%;
+  z-index: 3;
+  pointer-events: none;
+}
+
+/* Falling BABABA? text */
+.fall-text {
+  position: absolute;
+  font-size: 16px;
+  font-weight: bold;
+  color: #2b2b2b;
+  z-index: 2;
+  pointer-events: none;
+}
+</style>
+</head>
+<body>
+
+<div class="background-text">
+Dear Team Break Time,<br><br>
+As I bid farewell, I want to thank each of you for the laughter, teamwork, and memories we’ve shared.<br>
+Working with this team has been a privilege — your dedication and positivity have always inspired me.<br><br>
+Remember, every challenge is an opportunity, and every ending is just the beginning of something new.<br>
+Keep supporting each other, keep pushing boundaries, and never forget to take a moment for yourselves — even in the busiest days.<br><br>
+Though I’m moving on, the lessons and friendships I’ve gained here will always stay with me.<br>
+Wishing you all continued success, growth, and happiness.<br><br>
+With gratitude and warmest wishes,
+</div>
+
+<script>
+const quotes = [
+  "Goodbyes are not forever, nor the end. They simply mean I'll miss you until we meet again.",
+  "It's been a pleasure working with all of you. Thank you for the memories, the laughter, and the teamwork. Until we meet again.",
+  "Farewell team, keep in touch. Don't forget to laugh even on Monday mornings.",
+  "Every ending is a new beginning. I'm grateful for the time we shared, and I wish you all the best on your journeys ahead.",
+  "Thanks for the memories. Goodbye for now, but not forever."
+];
+
+let bubbles = [];
+let particles = [];
+let fallingTexts = [];
+
+class Bubble {
+  constructor() {
+    this.el = document.createElement('div');
+    this.el.className = 'bubble';
+    this.el.innerText = quotes[Math.floor(Math.random() * quotes.length)];
+
+    this.size = Math.random()*70 + 120;
+    this.el.style.width = this.size+'px';
+    this.el.style.height = this.size+'px';
+    this.x = Math.random()*(window.innerWidth-this.size);
+    this.y = window.innerHeight;
+    this.speed = Math.random()*1 + 0.5;
+
+    this.el.style.left = this.x+'px';
+    this.el.style.top = this.y+'px';
+
+    document.body.appendChild(this.el);
+
+    // Add click/tap pop
+    this.el.addEventListener('click', ()=>{ this.pop(); removeFromArray(this); });
+    this.el.addEventListener('touchstart', ()=>{ this.pop(); removeFromArray(this); });
+  }
+
+  update() {
+    this.y -= this.speed;
+    this.el.style.top = this.y+'px';
+    if(this.y + this.size < 0){
+      this.pop();
+      return false;
+    }
+    return true;
+  }
+
+  pop(){
+    const rect = this.el.getBoundingClientRect();
+    // create particles
+    for(let i=0;i<12;i++){
+      const angle = Math.random()*2*Math.PI;
+      const dist = Math.random()*60 + 20;
+      particles.push({
+        x: rect.left + rect.width/2,
+        y: rect.top + rect.height/2,
+        dx: Math.cos(angle)*dist/12,
+        dy: Math.sin(angle)*dist/12,
+        life: 30
+      });
+    }
+    // create falling text
+    fallingTexts.push({
+      x: rect.left + rect.width/2,
+      y: rect.top + rect.height/2,
+      text: "BABABA?",
+      life: 60
+    });
+    this.el.remove();
+  }
+}
+
+// helper to remove bubble from array
+function removeFromArray(bubble){
+  const index = bubbles.indexOf(bubble);
+  if(index>-1) bubbles.splice(index,1);
+}
+
+// Animate everything
+function animate(){
+  // bubbles
+  for(let i=bubbles.length-1;i>=0;i--){
+    if(!bubbles[i].update()){
+      bubbles.splice(i,1);
+    }
+  }
+
+  // particles
+  for(let i=particles.length-1;i>=0;i--){
+    let p = particles[i];
+    p.x += p.dx;
+    p.y += p.dy;
+    p.life--;
+    let el = document.createElement('div');
+    el.className='particle';
+    el.style.left = p.x+'px';
+    el.style.top = p.y+'px';
+    document.body.appendChild(el);
+    setTimeout(()=>el.remove(),50);
+    if(p.life<=0) particles.splice(i,1);
+  }
+
+  // falling texts
+  for(let i=fallingTexts.length-1;i>=0;i--){
+    let f = fallingTexts[i];
+    f.y += 2; // falling speed
+    f.life--;
+    let el = document.createElement('div');
+    el.className='fall-text';
+    el.style.left = f.x+'px';
+    el.style.top = f.y+'px';
+    el.innerText = f.text;
+    document.body.appendChild(el);
+    setTimeout(()=>el.remove(),50);
+    if(f.life<=0) fallingTexts.splice(i,1);
+  }
+
+  requestAnimationFrame(animate);
+}
+
+// create bubble every 1.5s
+setInterval(()=>bubbles.push(new Bubble()),1500);
+requestAnimationFrame(animate);
+</script>
+
+</body>
+</html>
